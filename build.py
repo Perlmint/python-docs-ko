@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import subprocess
+import sys
 
 VERSION = '3.7'
 
@@ -43,9 +44,18 @@ def prepare_env():
 
 def build():
     doc_dir = os.path.join('cpython', 'Doc')
-    shell(
-        "make VENVDIR=../../venv SPHINXOPTS='-D locale_dirs=../locale -D language=ko -D gettext_compact=0' autobuild-dev-html",
-        chdir=doc_dir)
+    sphinx_opts = "-D locale_dirs=../locale -D language=ko -D gettext_compact=0"
+    if sys.platform == 'win32':
+        backup_sphinxopts = os.environ['SPHINXOPTS']
+        os.environ['SPHINXOPTS'] = sphinx_opts + " -Ea -A daily=1 -A switchers=1"
+        shell(
+            "make html",
+            chdir=doc_dir)
+        os.environ['SPHINXOPTS'] = backup_sphinxopts
+    else:
+        shell(
+            "make VENVDIR=../../venv SPHINXOPTS='{}' autobuild-dev-html".format(sphinx_opts),
+            chdir=doc_dir)
 
 
 def main():
